@@ -16,9 +16,9 @@ class HomeController extends Controller
             // Si ocurre una excepción, significa que no hay conexión a la base de datos
             return view('home');
         }
-
+        return DB::connection()->getDatabaseName();
         // Si la prueba de conexión fue exitosa, redirige a la vista 'series.index'
-        return redirect()->route('series.index');
+        //return redirect()->route('series.index');
     }
 
     public function guardar_configuracion(Request $request){

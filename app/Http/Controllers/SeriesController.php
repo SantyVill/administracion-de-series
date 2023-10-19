@@ -26,7 +26,7 @@ class SeriesController extends Controller
      */
     public function create()
     {
-        return view('equipos.create');
+        return view('series.create');
     }
 
     /**
@@ -37,15 +37,14 @@ class SeriesController extends Controller
      */
     public function store(Request $request)
     {
-        try {
+        /* try { */
             request()->validate([
-                'titulo'=>'required|max:'.config('tam_numSerie'),
-                'descripcion'=>'',
-                'fecha_estreno'=>'required|max:'.config('tam_tipo'),
-                'estrellas'=>'required|max:'.config('tam_marca'),
-                'genero'=>'required|max:'.config('tam_modelo'),
-                'precio_alquiler'=>'',
-                'atp'=>'',
+                'titulo'=>'required|max:150',
+                'descripcion'=>'required',
+                'fecha_estreno'=>'required',
+                'estrellas'=>'required|integer|between:1,5',
+                'genero'=>'required',
+                'precio_alquiler'=>'required',
             ]);
 
             $serie=Serie::firstOrCreate([
@@ -55,14 +54,15 @@ class SeriesController extends Controller
                 'estrellas'=>request('estrellas'),
                 'genero'=>ucfirst(request('genero')),
                 'precio_alquiler'=>request('precio_alquiler'),
-                'atp'=>request('atp'),
+                'ATP'=>request('atp')=="on",
+                'estado'=>"AC"
             ]);
             
             return redirect()->route('series.index');
-        } catch (\Illuminate\Database\QueryException $e) {
+        /* } catch (\Illuminate\Database\QueryException $e) {
             $mensaje = 'Se ha producido un error al intentar cargar los datos';
             return redirect()->back()->with('message', $mensaje);
-        }
+        } */
     }
 
     /**
@@ -83,9 +83,13 @@ class SeriesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Serie $serie)
+    public function edit($id)
     {
-        return view('equipos.edit',compact('serie'));
+        $serie = Serie::find($id);
+        if ($serie->estado=="AN") {
+            return redirect()->route('series.index')->with('message', 'No se puede modificar una serie anulada');
+        }
+        return view('series.edit',compact('serie'));
     }
 
     /**
@@ -95,34 +99,33 @@ class SeriesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request,Serie $serie)
+    public function update(Request $request,$id)
     {
-        try {
+        /* try { */
+            $serie= Serie::find($id);
             request()->validate([
-                'titulo'=>'required|max:'.config('tam_numSerie'),
-                'descripcion'=>'',
-                'fecha_estreno'=>'required|max:'.config('tam_tipo'),
-                'estrellas'=>'required|max:'.config('tam_marca'),
-                'genero'=>'required|max:'.config('tam_modelo'),
-                'precio_alquiler'=>'',
-                'atp'=>'',
-            ]);
-
-            $serie=Serie::firstOrCreate([
-                $serie->titulo=>ucfirst(request('titulo')),
-                $serie->descricion=ucfirst(request('descripcion')),
-                $serie->fecha_streno=request('fecha_estreno'),
-                $serie->estrelas=request('estrellas'),
-                $serie->genero=ucfirst(request('genero')),
-                $serie->precioalquiler=request('precio_alquiler'),
-                $serie->atp=request('atp'),
+                'titulo'=>'required|max:150',
+                'descripcion'=>'required',
+                'fecha_estreno'=>'required',
+                'estrellas'=>'required|integer|between:1,5',
+                'genero'=>'required',
+                'precio_alquiler'=>'required',
             ]);
             
+            
+                $serie->titulo=ucfirst(request('titulo'));
+                $serie->descripcion=ucfirst(request('descripcion'));
+                $serie->fecha_estreno=request('fecha_estreno');
+                $serie->estrellas=request('estrellas');
+                $serie->genero=ucfirst(request('genero'));
+                $serie->precio_alquiler=request('precio_alquiler');
+                $serie->ATP=request('atp')=="on";
+            $serie->save();
             return redirect()->route('series.index');
-        } catch (\Illuminate\Database\QueryException $e) {
+        /* } catch (\Illuminate\Database\QueryException $e) {
             $mensaje = 'Se ha producido un error al intentar cargar los datos';
             return redirect()->back()->with('message', $mensaje);
-        }
+        } */
     }
 
     /**
@@ -131,10 +134,24 @@ class SeriesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Serie $serie)
+    public function destroy($id)
     {
         try {
+            $serie = Serie::find($id);
             $serie->delete();
+            return redirect()->route('series.index');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $mensaje = 'Se ha producido un error al intentar eliminar la serie.'/*  . $e->getMessage() */;
+            return redirect()->back()->with('message', $mensaje);
+        }
+    }
+
+    public function anular($id)
+    {
+        $serie = Serie::Find($id);
+        try {
+            $serie->estado="AN";
+            $serie->save();
             return redirect()->route('series.index');
         } catch (\Illuminate\Database\QueryException $e) {
             $mensaje = 'Se ha producido un error al intentar eliminar la serie.'/*  . $e->getMessage() */;

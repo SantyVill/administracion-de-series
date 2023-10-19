@@ -23,6 +23,7 @@ class CreateSeriesTable extends Migration
             $table->decimal('precio_alquiler',9,2);
             $table->boolean('ATP');
             $table->string('estado',3);
+            $table->timestamps();
         });
     }
 
